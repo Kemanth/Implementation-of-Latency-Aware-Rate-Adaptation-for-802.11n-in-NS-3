@@ -3,6 +3,7 @@
 
 #include "llra-wifi-manager.h"
 #include "ns3/log.h"
+#include "wifi-phy.h"
 #include "ns3/uinteger.h"
 
 #define Min(a,b) ((a < b) ? a : b)
@@ -27,24 +28,30 @@ struct LlraWifiRemoteStation : public WifiRemoteStation
   uint32_t m_timerTimeout; ///< timer timeout
   uint32_t m_rate; ///< rate
   uint32_t m_alpha; ///< alpha percentile
+  double m_lastSnrObserved;  //!< SNR of most recently reported packet sent to the remote station
+  double m_lastSnrCached;    //!< SNR most recently used to select a rate
+  double m_nss;          //!< SNR most recently used to select a rate
+  WifiMode m_lastMode;       //!< Mode most recently used to the remote station
 };
 
+/// To avoid using the cache before a valid value has been cached
+static const double CACHE_INITIAL_VALUE = -100;
 NS_OBJECT_ENSURE_REGISTERED (LlraWifiManager);
 
 TypeId
 LlraWifiManager::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::LaraWifiManager")
+  static TypeId tid = TypeId ("ns3::LlraWifiManager")
     .SetParent<WifiRemoteStationManager> ()
     .SetGroupName ("Wifi")
-    .AddConstructor<LaraWifiManager> ()
+    .AddConstructor<LlraWifiManager> ()
     .AddAttribute ("Alpha", "The alpha percentile.",
                    UintegerValue (95),
-                   MakeUintegerAccessor (&LaraWifiManager::m_alpha),
+                   MakeUintegerAccessor (&LlraWifiManager::m_alpha),
                    MakeUintegerChecker<uint32_t> ())
     .AddTraceSource ("Rate",
                      "Traced value for rate changes (b/s)",
-                     MakeTraceSourceAccessor (&LaraWifiManager::m_currentRate),
+                     MakeTraceSourceAccessor (&LlraWifiManager::m_currentRate),
                      "ns3::TracedValueCallback::Uint64")
   ;
   return tid;
@@ -261,7 +268,7 @@ void
 LlraWifiManager::DoReportFinalDataFailed (WifiRemoteStation *station)
 {
 }
-
+/*
 WifiTxVector
 LlraWifiManager::DoGetDataTxVector (WifiRemoteStation *st)
 {
@@ -271,7 +278,7 @@ WifiTxVector
 LlraWifiManager::DoGetRtsTxVector (WifiRemoteStation *st)
 {
 }
-
+*/
 bool
 LlraWifiManager::IsLowLatency (void) const
 {

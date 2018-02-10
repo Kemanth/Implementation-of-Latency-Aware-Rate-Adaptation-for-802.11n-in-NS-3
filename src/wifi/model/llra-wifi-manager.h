@@ -19,11 +19,12 @@ public:
   static TypeId GetTypeId (void);
   LlraWifiManager ();
   virtual ~LlraWifiManager ();
-  
-  void SetupPhy (const Ptr<WifiPhy> phy);  
+
+  void SetupPhy (const Ptr<WifiPhy> phy);
 
 private:
   //overriden from base class
+  void DoInitialize (void);
   WifiRemoteStation * DoCreateStation (void) const;
   void DoReportRxOk (WifiRemoteStation *station,
                      double rxSnr, WifiMode txMode);
@@ -35,6 +36,9 @@ private:
                        double ackSnr, WifiMode ackMode, double dataSnr);
   void DoReportFinalRtsFailed (WifiRemoteStation *station);
   void DoReportFinalDataFailed (WifiRemoteStation *station);
+  void DoReportAmpduTxStatus (WifiRemoteStation *station,
+                              uint8_t nSuccessfulMpdus, uint8_t nFailedMpdus,
+                              double rxSnr, double dataSnr);
   WifiTxVector DoGetDataTxVector (WifiRemoteStation *station);
   WifiTxVector DoGetRtsTxVector (WifiRemoteStation *station);
   bool IsLowLatency (void) const;
