@@ -20,10 +20,10 @@ NS_LOG_COMPONENT_DEFINE ("LlraWifiManager");
  */
 struct LlraWifiRemoteStation : public WifiRemoteStation
 {
-  uint32_t m_timer; ///< timer value
+  uint32_t m_packets; ///< timer value
   uint32_t m_success; ///< success count
   uint32_t m_failed; ///< failed count
-  bool m_recovery; ///< recovery
+  uint32_t Nrt[100];
   uint32_t m_retry; ///< retry count
   uint32_t m_timerTimeout; ///< timer timeout
   uint32_t m_rate; ///< rate
@@ -220,6 +220,10 @@ LlraWifiManager::DoReportRtsFailed (WifiRemoteStation *station)
 void
 LlraWifiManager::DoReportDataFailed (WifiRemoteStation *station)
 {
+  NS_LOG_FUNCTION (this << st << ackSnr << ackMode.GetUniqueName () << dataSnr);
+  LlraWifiRemoteStation *station = (LlraWifiRemoteStation *)st;
+  station->packets++;
+  CalculateLatency(station);
 }
 
 void
@@ -237,6 +241,8 @@ LlraWifiManager::DoReportDataOk (WifiRemoteStation *st,
 {
   NS_LOG_FUNCTION (this << st << ackSnr << ackMode.GetUniqueName () << dataSnr);
   LlraWifiRemoteStation *station = (LlraWifiRemoteStation *)st;
+  station->packets++;
+  CalculateLatency(station);
   if (dataSnr == 0)
     {
       NS_LOG_WARN ("DataSnr reported to be zero; not saving this report.");
@@ -268,17 +274,40 @@ void
 LlraWifiManager::DoReportFinalDataFailed (WifiRemoteStation *station)
 {
 }
-/*
+
+void
+LlraWifiManager::ProbeMode (WifiRemoteStation *st)
+{
+
+}
+
+double
+LlraWifiManager::CalculateLatency (WifiRemoteStation *st)
+{
+  double latency = Tinitial + Tserv;
+
+
+}
+
 WifiTxVector
 LlraWifiManager::DoGetDataTxVector (WifiRemoteStation *st)
 {
+  NS_LOG_FUNCTION (this << st);
+  LlraWifiRemoteStation *station = (LlraWifiRemoteStation *)st;
+  
+  if(station->packets % 100 == 0){
+
+    if(station->Nrt[station->alpha] > 0)
+      ProbeMode(station);
+  }
+
 }
 
 WifiTxVector
 LlraWifiManager::DoGetRtsTxVector (WifiRemoteStation *st)
 {
 }
-*/
+
 bool
 LlraWifiManager::IsLowLatency (void) const
 {
