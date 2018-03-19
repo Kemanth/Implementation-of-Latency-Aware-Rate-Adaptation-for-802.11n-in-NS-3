@@ -223,7 +223,6 @@ LlraWifiManager::DoReportDataFailed (WifiRemoteStation *station)
   NS_LOG_FUNCTION (this << st << ackSnr << ackMode.GetUniqueName () << dataSnr);
   LlraWifiRemoteStation *station = (LlraWifiRemoteStation *)st;
   station->packets++;
-  CalculateLatency(station);
 }
 
 void
@@ -242,7 +241,6 @@ LlraWifiManager::DoReportDataOk (WifiRemoteStation *st,
   NS_LOG_FUNCTION (this << st << ackSnr << ackMode.GetUniqueName () << dataSnr);
   LlraWifiRemoteStation *station = (LlraWifiRemoteStation *)st;
   station->packets++;
-  CalculateLatency(station);
   if (dataSnr == 0)
     {
       NS_LOG_WARN ("DataSnr reported to be zero; not saving this report.");
@@ -275,9 +273,40 @@ LlraWifiManager::DoReportFinalDataFailed (WifiRemoteStation *station)
 {
 }
 
-void
+WifiMode
 LlraWifiManager::ProbeMode (WifiRemoteStation *st)
 {
+	NS_LOG_FUNCTION (this << st);
+  LlraWifiRemoteStation *station = (LlraWifiRemoteStation *)st;
+  WifiMode mode;
+	mode = GetMcsSupported (station, m_rate);
+
+	if(Nrt[m_alpha] == 0)
+	{
+		if(m_rate != GetNMcsSupported (station))
+		{
+			mode = GetMcsSupported (station, ++m_rate);
+			CalculateLatency(station,mode);
+			if(Dest[m_rate] > Dest[m_rate - 1])
+			{
+				mode = GetMcsSupported (station, --m_rate);
+			}
+		}
+	}
+	else if(Nrt[m_alpha] > 1)
+	{
+		if(m_rate != 0)
+		{
+			mode = GetMcsSupported (station, --m_rate);
+			CalculateLatency(station,mode);
+			if(Dest[m_rate] > Dest[m_rate + 1])
+			{
+				mode = GetMcsSupported (station, ++m_rate);
+			}
+		}
+	}
+
+	return mode;
 
 }
 
@@ -294,11 +323,15 @@ LlraWifiManager::DoGetDataTxVector (WifiRemoteStation *st)
 {
   NS_LOG_FUNCTION (this << st);
   LlraWifiRemoteStation *station = (LlraWifiRemoteStation *)st;
+
+  WifiTxVector txVector;
+  WifiMode mode;
   
   if(station->packets % 100 == 0){
 
-    if(station->Nrt[station->alpha] > 0)
-      ProbeMode(station);
+      mode = ProbeMode(station);
+      txVector.SetMode (mode);
+
   }
 
 }
