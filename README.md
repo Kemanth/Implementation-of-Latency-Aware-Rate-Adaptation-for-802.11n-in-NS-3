@@ -1,8 +1,8 @@
 # Implementation of Latency Aware Rate Adaptation for 802.11n in ns-3
 
-## Assignment No: #1
-
 # Course Code: CS821
+
+## Assignment No: #1
 
 ## Overview
 
